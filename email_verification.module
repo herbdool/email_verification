@@ -1,0 +1,124 @@
+<?php
+
+/**
+ * @file
+ * Email verification
+ */
+
+/**
+ * Implements hook_form_alter().
+ */
+function email_verification_form_alter(&$form, &$form_state, $form_id) {
+  if (!user_is_anonymous()) {
+    return;
+  }
+
+  if ($form_id != 'user_register_form') {
+    return;
+  }
+
+  $form['account']['send_code'] = array(
+    '#type' => 'button',
+    '#value' => 'Send verification code',
+    '#limit_validation_errors' => array(),
+    '#suffix' => '<div>' . t('Enter your email address and click <em>Send verification code</em>.') . '</div><div id="verification-message"></div>',
+    '#ajax' => array(
+      'callback' => 'email_verification_form_ajax_submit',
+      'wrapper' => 'verification-message',
+      'effect' => 'fade',
+    ),
+  );
+  $form['account']['verification_code'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Verification code'),
+    '#required' => 1,
+  );
+  $form['#validate'][] = 'email_verification_register_validate';
+
+}
+
+/**
+ * Submit handler for email_verification_form_alter().
+ */
+function email_verification_form_ajax_submit(&$form, &$form_state) {
+  global $language;
+
+  $mail = $form_state['values']['mail'];
+  if (!valid_email_address($mail)) {
+    return(t('The email address appears to be invalid. No email was sent.'));
+  }
+
+  // Generate verification code.
+  $verification_code = substr(md5(backdrop_get_hash_salt() . $mail), 0, 6);
+
+  // Find verification code or insert/update.
+  $vc_id = db_select('email_verification', 'ev')
+    ->fields('ev', array('id'))
+    ->condition('mail', $mail, '=')
+    ->execute()
+    ->fetchField();
+
+  if (!($vc_id) || $vc_id == '') {
+    db_insert('email_verification')
+    ->fields(array(
+        'mail' => $mail,
+        'code' => $verification_code,
+      ))
+      ->execute();
+  } else {
+    db_update('email_verification')
+    ->fields(array(
+        'mail' => $mail,
+        'code' => $verification_code,
+      ))
+      ->condition('id', $vc_id, '=')
+      ->execute();
+  }
+
+  // Mail the verification code.
+  $to = $mail;
+  $from = config_get('system.core', 'site_mail');
+
+  $params['subject'] = t('[@site_name] Registration form verification code', array(
+    '@site_name' => config_get('system.core', 'site_name'),
+  ));
+
+  $params['message'] = t('Verification code: @code. Copy and paste it into the <strong>Verification code</strong> field on the registration form and click "Create new account".', array('@code' => $verification_code));
+
+  $sent = backdrop_mail('email_verification', 'verify', $to, $language, $params, $from);
+
+  if ($sent) {
+    return (t('Email sent successfully. Please check your email inbox for your verification code.'));
+  } else {
+    return (t('Email not sent. An error was encountered when trying to send the email.'));
+  }
+}
+
+/**
+ * Validate handler for email_verification_form_alter().
+ */
+function email_verification_register_validate(&$form, &$form_state) {
+  $mail = $form_state['values']['mail'];
+
+  // Get verification code for user's email address.
+  $code = db_select('email_verification', 'ev')
+    ->fields('ev', array('code'))
+    ->condition('mail', $mail)
+    ->execute()->fetchField();
+
+  if ($form_state['values']['verification_code'] !== $code) {
+    form_set_error('verification_code', t('The verification code appears to be invalid.'));
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function email_verification_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'verify':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      break;
+  }
+}

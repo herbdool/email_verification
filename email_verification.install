@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * Install
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function email_verification_schema() {
+  $schema['email_verification'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique verification ID',
+      ),
+      'mail' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Registrant \'s email address',
+      ),
+      'code' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => true,
+        'description' => 'Verification code',
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function custom_mail_verification_install() {
+  backdrop_flush_all_caches();
+}
