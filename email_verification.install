@@ -20,7 +20,7 @@ function email_verification_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'description' => 'Registrant \'s email address',
+        'description' => 'Registrant\'s email address',
       ),
       'code' => array(
         'type' => 'varchar',

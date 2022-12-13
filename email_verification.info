@@ -1,4 +1,4 @@
 name = "Email verification"
-description = Verify an email address before allowing a user to create an account on Backdrop.
+description = "Ensure someone needs to verify their email address before being allowed to create a user account."
 backdrop = 1.x
 type = module

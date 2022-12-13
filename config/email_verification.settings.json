@@ -1,0 +1,9 @@
+{
+  "_config_name": "email_verification.settings",
+  "_config_translatables": [
+    "verify_body",
+    "verify_subject"
+  ],
+  "verify_body": "Your verification code for [site:name] is: [email-verification:verification-code].\n\nYou may now click this link or copying and pasting the verification code into your registration form:\n\n[email-verification:verification-url]\n\nThis link will lead you to the registration page where you can complete your registration.\n\n--  [site:name] team",
+  "verify_subject": "Verification code for [site:name]"
+}

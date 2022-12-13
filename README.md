@@ -2,8 +2,11 @@
 
 Verify an email address before allowing a user to create an account on Backdrop.
 
-This is to avoid a spam user account created using a nonexistant email address. This
-module makes sure that the email address used in account creation has a valid inbox.
+This module makes sure that the email address used in account creation has a valid inbox.
+
+The person filling out the registration form will be required to receive a verification
+code to the email address they provided and provide that code in the registration form
+before they are allowed to create a user account.
 
 ## Installation and use
 
